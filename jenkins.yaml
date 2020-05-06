@@ -44,8 +44,6 @@ subjects:
 - kind: ServiceAccount
   name: jenkins
 ---
-# Allows jenkins to create persistent volumes
-# This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -62,7 +60,6 @@ roleRef:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  # "namespace" omitted since ClusterRoles are not namespaced
   name: jenkinsclusterrole
 rules:
 - apiGroups: [""]
@@ -86,7 +83,7 @@ spec:
     spec:
       containers:
         - name: jenkins
-          image: myjenkins:latest
+          image: pf9sys/jenkinsci:jenkins
           env:
             - name: JAVA_OPTS
               value: -Djenkins.install.runSetupWizard=false
@@ -100,10 +97,8 @@ spec:
               mountPath: /var/jenkins_home
             - name: docker-sock-volume
               mountPath: "/var/run/docker.sock"
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
       volumes:
-        # This allows jenkins to use the docker daemon on the host, for running builds
-        # see https://stackoverflow.com/questions/27879713/is-it-ok-to-run-docker-from-inside-docker
         - name: docker-sock-volume
           hostPath:
             path: /var/run/docker.sock
